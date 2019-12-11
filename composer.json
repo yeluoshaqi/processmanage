@@ -1,0 +1,25 @@
+{
+    "name": "processmanage",
+    "description": "An object-oriented multi process manager for PHP",
+    "type": "project",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "hejunliang",
+            "email": "he.junliang"
+        }
+    ],
+    "require": {
+    },
+    "autoload": {
+        "psr-4": {
+            "processmanage\\": "/src/",
+        }
+    },
+    "scripts": {
+        "post-root-project-cmd": [
+            "cp .env.example .env"
+        ]
+    }
+}
