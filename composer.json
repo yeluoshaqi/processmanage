@@ -10,7 +10,7 @@
             "email": "he.junliang@immomo.com"
         }
     ],
-    "require": {
+    "require":{
     },
     "autoload": {
         "psr-4": {
