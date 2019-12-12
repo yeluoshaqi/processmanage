@@ -3,24 +3,24 @@
 // require composer autoload file
 require(__DIR__ . '/vendor/autoload.php');
 
-// register autoload
-spl_autoload_register('autoload');
-function autoload($class)
-{
-    echo "autoload. {$class} \n";
-	// $classOrigin = $class;
- //    $classInfo   = explode('\\', $class);
- //    $className   = array_pop($classInfo);
- //    foreach ($classInfo as &$v) {
- //        $v = strtolower($v);
- //    }
- //    unset($v);
- //    array_push($classInfo, $className);
- //    $class       = implode('\\', $classInfo);
- //    $class       = str_replace('naruto', 'src', $class);
- //    $classPath   = __DIR__ . '/'.str_replace('\\', '/', $class) . '.php';
- //    require($classPath);
-}
+// // register autoload
+// spl_autoload_register('autoload');
+// function autoload($class)
+// {
+//     echo "autoload. {$class} \n";
+// 	$classOrigin = $class;
+//     $classInfo   = explode('\\', $class);
+//     $className   = array_pop($classInfo);
+//     foreach ($classInfo as &$v) {
+//         $v = strtolower($v);
+//     }
+//     unset($v);
+//     array_push($classInfo, $className);
+//     $class       = implode('\\', $classInfo);
+//     $class       = str_replace('processmanage', 'src', $class);
+//     $classPath   = __DIR__ . '/'.str_replace('\\', '/', $class) . '.php';
+//     require($classPath);
+// }
 
 function debug($tag, $info) {
 
@@ -36,7 +36,7 @@ function debug($tag, $info) {
 
 /* -----------------------demo------------------- */
 
-use Naruto\Manager;
+use processmanage\Manager;
 
 /**
  * example

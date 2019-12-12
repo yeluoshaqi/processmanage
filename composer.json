@@ -1,5 +1,5 @@
 {
-    "name": "processmanage",
+    "name": "momo/processmanage",
     "description": "An object-oriented multi process manager for PHP",
     "type": "project",
     "minimum-stability": "stable",
@@ -7,14 +7,14 @@
     "authors": [
         {
             "name": "hejunliang",
-            "email": "he.junliang"
+            "email": "he.junliang@immomo.com"
         }
     ],
     "require": {
     },
     "autoload": {
         "psr-4": {
-            "processmanage\\": "/src/",
+            "processmanage\\": "/src/"
         }
     },
     "scripts": {

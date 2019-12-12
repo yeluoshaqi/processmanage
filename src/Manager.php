@@ -21,7 +21,7 @@ class Manager extends Process {
 	private $maxNum = 16;
 
 	//	扩缩容策略采样数据容量
-	private $samplingBucket =[]
+	private $samplingBucket =[];
 	private $samplinglen =60;
 	private $extendAndStrategyCapacityTime=0;
 	
@@ -36,7 +36,7 @@ class Manager extends Process {
 	private $signalStopTs = 0;
 	private $stopWaitMaxTs = 10;
 	
-	
+
 	public function __construct() {
 
 		$this->type = "manager";
@@ -66,7 +66,7 @@ class Manager extends Process {
 
 	public function loadConfig() {
 
-		$config = parse_ini_file("../config/config.ini", true);
+		$config = parse_ini_file("./config/config.ini", true);
 
 		$this->startNum = (int)$config['startnum'] ? $this->startNum : 8;
 		$this->minNum = (int)$config['minnum'] ? $this->minNum : 4;
