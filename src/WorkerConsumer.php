@@ -2,8 +2,9 @@
 
 namespace processmanage;
 
+use Closure;
 use processmanage\Process;
-use processmanage\queue\MsgQueue;
+use processmanage\queue\ProcessQueue;
 
 class WorkerConsumer extends Process {
 		
@@ -15,26 +16,26 @@ class WorkerConsumer extends Process {
 
 	public function __construct($config = []) {
 		$this->type    = isset($config['type'])? $config['type']: 'WorkerConsumer';
-		$this->msgQueue    = isset($config['msg_queue'])? $config['msg_queue']: '';
+		$this->processQueue    = isset($config['process_queue'])? $config['process_queue']: '';
 		$this->pid    = isset($config['pid'])? $config['pid']: '';
 
 		parent::__construct();
 	}
 
 	//	主循环
-	public function hangup() {
+	public function hangup(Closure $closure) {
 
 		$this->registerSigHandler();
 
 		while (true) {
 			//	do work
-			$this->deal();
-
+			$data = $this->deal();
+			$closure($data);
 			//	信号分发
 			pcntl_signal_dispatch();
 
 			// 如果进程是待退出状态 并且msg queue已处理完毕
-			if ($this->workerExitFlag === "stop" && $this->msgQueue->getMsgQueueLen() == 0) {
+			if ($this->workerExitFlag === "stop" && $this->processQueue->getProcessQueueLen() == 0) {
 				$this->workerExit();
 				return;
 			}
@@ -78,18 +79,20 @@ class WorkerConsumer extends Process {
 
 	private function deal() {
 		$time = microtime(true);
-		$data = $this->msgQueue->receive(1);
+		$data = $this->processQueue->receive(1);
+		// var_dump($data);
 		$time = microtime(true) - $time;
 		$strlen = strlen($data['msg']);
-		$queuelen = $this->msgQueue->getMsgQueueLen();
+		$queuelen = $this->processQueue->getProcessQueueLen();
 
 		$msg = ['from'  => "msg_receive",	'extra' => "msg receive res: {$data['msg']}, len:{$strlen}, messageType:1,  time:{$time},  errorcode:{$data['errorcode']}, queuelen:{$queuelen}",];
 		Process::debug("msg receive ", $msg);
 
-		if(empty($message)) {
+		if(empty($data['msg'])) {
 			sleep(1);
 		}
-		// sleep(1);
 		usleep(20000);
+
+		return $data['msg'];
 	}
 }

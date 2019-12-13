@@ -1,6 +1,8 @@
 <?php
 namespace processmanage;
 
+use Closure;
+
 abstract class Process {
 
 	//	标识是master还是worker
@@ -9,15 +11,15 @@ abstract class Process {
 	public $startTime = 0;
 
 	//	a resource handle that can be used to access the System V message queue.
-	protected $msgQueue;
-	protected $msgQueueMaxLen = 20;	//	消息队列最大长度	
-	protected $msgQueueMsgMaxSize;	//	消息队列单个消息最大长度
+	protected $processQueue;
+	protected $processQueueMaxLen = 20;	//	消息队列最大长度	
+	protected $processQueueMsgMaxSize;	//	消息队列单个消息最大长度
 
 	//	用户信号
 	protected $userSignal = "";
 
 	//	是否停止进程
-	protected $workerExitFlag = "";
+	protected  $workerExitFlag = "";
 
 	//	挂起进程时间
 	protected static $hangupLoopMicrotime = 200000;
@@ -28,6 +30,10 @@ abstract class Process {
 	//	当前运行次数
 	protected static $currentExecuteTimes = 0;
 
+	
+	//	日志目录
+	protected static $logdir;
+
 	public function __construct() {
 		
 		if (empty($this->pid)) {
@@ -37,7 +43,7 @@ abstract class Process {
 	}
 
 	//	主循环
-	abstract protected function hangup();
+	abstract protected function hangup(Closure $closure);
 
 	//	主循环
 	abstract protected function defineSigHandler($signal);
@@ -73,6 +79,6 @@ abstract class Process {
 			$str = "{$tag}    ------ {$info}";
 		}
 
-		file_put_contents("/tmp/naruto/".$info['from'], $str, FILE_APPEND);
+		file_put_contents(self::$logdir.$info['from'], $str, FILE_APPEND);
 	}
 }

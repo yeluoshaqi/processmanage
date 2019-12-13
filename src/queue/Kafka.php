@@ -1,5 +1,5 @@
 <?php
-namespace processmanage;
+namespace processmanage\queue;
 
 class Kafka {
 	
@@ -13,22 +13,22 @@ class Kafka {
 	private $kfkConsumer;
 
 	public function __construct($config = []) {
-		$this->topic = isset($config['topic']) ? $conf['topic'] : "test";
-		$this->group = isset($config['group']) ? $conf['group'] : "consumer_test1";
-		$this->brokers = isset($config['brokers']) ? $conf['brokers'] : "127.0.0.1:19091,127.0.0.1:19092,127.0.0.1:19093";
-		$this->autoCommitIntervalMs = isset($config['autoCommitIntervalMs']) ? $conf['autoCommitIntervalMs'] : 100;
-		$this->enableAutoCommit = isset($config['enableAutoCommit']) ? $conf['enableAutoCommit'] : true;
+		$this->topic = isset($config['topic']) ? $config['topic'] : "test";
+		$this->group = isset($config['group']) ? $config['group'] : "consumer_test1";
+		$this->brokers = isset($config['brokers']) ? $config['brokers'] : "127.0.0.1:19091,127.0.0.1:19092,127.0.0.1:19093";
+		$this->autoCommitIntervalMs = isset($config['autoCommitIntervalMs']) ? $config['autoCommitIntervalMs'] : 100;
+		$this->enableAutoCommit = isset($config['enableAutoCommit']) ? $config['enableAutoCommit'] : true;
 	}
 
 	public function init () {
 		$conf = new \RdKafka\Conf();
 		$conf->setRebalanceCb(function (\RdKafka\KafkaConsumer $kafka, $err, array $partitions = null) {
-		    kfk::$partitions = [];
+		    Kafka::$partitions = [];
 		    switch ($err) {
 		        case RD_KAFKA_RESP_ERR__ASSIGN_PARTITIONS:
 		        	foreach ($partitions as $value) {
 		        		$partition = $value->getPartition();
-		        		kfk::$partitions[$partition] = $partition;
+		        		Kafka::$partitions[$partition] = $partition;
 		        	}
 		           	var_dump("consumer assign partition", $partitions);
 		            $kafka->assign($partitions);
@@ -37,7 +37,7 @@ class Kafka {
 		        case RD_KAFKA_RESP_ERR__REVOKE_PARTITIONS:
 		           	foreach ($partitions as $value) {      
 		        		$partition = $value->getPartition();
-		        		kfk::$partitions[$partition] = $partition;
+		        		Kafka::$partitions[$partition] = $partition;
 		        	}
 		           	var_dump("consumer revoke partitions", $partitions);
 		            $kafka->assign(NULL);
@@ -74,7 +74,7 @@ class Kafka {
 	}
 
 	//	待消费队列长度
-	public function partitionLengh() {
+	public function length() {
 
 		if(count(self::$partitions) == 0) {
 			return 0;
@@ -107,7 +107,7 @@ class Kafka {
         return $lens;
 	} 
 
-	public function productData() {
+	public function getData() {
 
 		$str = "";
 	    $message = $this->kfkConsumer->consume(5*1000);

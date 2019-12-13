@@ -2,9 +2,10 @@
 
 namespace processmanage;
 
+use Closure;
 use processmanage\Process;
 use processmanage\queue\Kafka;
-use processmanage\queue\MsgQueue;
+use processmanage\queue\ProcessQueue;
 
 class WorkerProducter extends Process {
 
@@ -24,7 +25,7 @@ class WorkerProducter extends Process {
 
 	public function __construct($config = []) {
 		$this->type    = isset($config['type'])? $config['type']: 'producter_workers';
-		$this->msgQueue    = isset($config['msg_queue'])? $config['msg_queue']: '';
+		$this->processQueue    = isset($config['process_queue'])? $config['process_queue']: '';
 		$this->pid    = isset($config['pid'])? $config['pid']: '';
 
 		parent::__construct();
@@ -48,12 +49,14 @@ class WorkerProducter extends Process {
 	}
 
 	//	主循环
-	public function hangup() {
+	public function hangup(Closure $closure) {
 
 		$this->loadConfig();
 
 		$name = $this->queueName;
-		$this->queue = new $name($this->queueConfig);
+		// $this->queue = new $name($this->queueConfig);
+		$this->queue = new Kafka($this->queueConfig);
+
 		$this->queue->init();
 
 		$this->registerSigHandler();
@@ -66,8 +69,8 @@ class WorkerProducter extends Process {
 			$this->forConsumptionLength();
 
 			//	进程间msg队列过长 
-			if($this->msgQueue->getMsgQueueLen() >= $this->msgQueueMaxLen) {
-				$msg = ['from'  => $this->type,'extra' => " ------- msg queue len to large: ". $this->msgQueue->getMsgQueueLen()];
+			if($this->processQueue->getProcessQueueLen() >= $this->processQueueMaxLen) {
+				$msg = ['from'  => $this->type,'extra' => " ------- msg queue len to large: ". $this->processQueue->getProcessQueueLen()];
 				Process::debug("msg queue len to large ", $msg);
 				usleep(1000);
 				continue;
@@ -95,7 +98,7 @@ class WorkerProducter extends Process {
 
 		//	获取数据
 		try{
-			$str = $this->queue->productData();
+			$str = $this->queue->getData();
 		} catch(Exception $e) {
 			var_dump($e);
 			$this->workerExit();
@@ -109,7 +112,7 @@ class WorkerProducter extends Process {
 		}
 		
 		//	发送数据
-		$this->msgQueue->send($str, 1);
+		$this->processQueue->send($str, 1);
 	}
 
 	//	等待消费的队列长度
@@ -122,7 +125,7 @@ class WorkerProducter extends Process {
 			//	当前时间和空数据时间差值大于10S
 			if($now - $this->emptyDataTime > 10) {
 				try{
-					$queueLength = $this->queue->partitionLengh();
+					$queueLength = $this->queue->length();
 				}catch(Exception $e) {
 					var_dump($e);
 					$this->workerExit();
@@ -131,7 +134,7 @@ class WorkerProducter extends Process {
 				$queueLength = 0;
 			}
 
-			$this->msgQueue->send(['ts' => $now, 'length' => $queueLength], 2);
+			$this->processQueue->send(['ts' => $now, 'length' => $queueLength], 2);
 
 			$this->sendQueueLengthTime = $now;
 		}
@@ -139,11 +142,11 @@ class WorkerProducter extends Process {
 
 	private function loadConfig() {
 		
-		$config = parse_ini_file("../config/config.ini", true);
+		$config = parse_ini_file(dirname(__FILE__) . "/config/config.ini", true);
 
-		$this->logdir = $config['logdir'] ? $config['logdir'] : '/tmp';
-		$this->queueName = $config['queuename'] ? $config['queuename'] : 'kafka';
-		$this->queueConfig = $config[$this->queueName] ? $config[$this->queueName] : [];
+		$queuename = $config['queue']['queuename'] ? $config['queue']['queuename'] : 'kafka';
+		$this->queueConfig = $config[$queuename] ? $config[$queuename] : [];
+		$this->queueName = ucfirst($queuename);
 	}
 }
 

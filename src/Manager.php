@@ -2,10 +2,12 @@
 
 namespace processmanage;
 
+use Closure;
+use Exception;
 use processmanage\WorkerProducter;
 use processmanage\WorkerConsumer;
-use processmanage\queue\MsgQueue;
-use Exception;
+use processmanage\queue\ProcessQueue;
+
 
 date_default_timezone_set('Asia/Shanghai');
 
@@ -37,15 +39,17 @@ class Manager extends Process {
 	private $stopWaitMaxTs = 10;
 	
 
-	public function __construct() {
+	public function __construct($config, Closure $closure) {
 
 		$this->type = "manager";
 		
-		$this->loadConfig();
+		$this->loadConfig($config);
+
+		$this->workerClosure = $closure;
 
 		parent::__construct();
 		//	获取消息队列
-		$this->msgQueue = new MsgQueue($this->pid);
+		$this->processQueue = new ProcessQueue($this->pid);
 
 		// exectue fork
 		$this->forkProduct();
@@ -57,26 +61,26 @@ class Manager extends Process {
 		$this->extendAndStrategyCapacityTime = time();
 
 		// hangup master
-		$this->hangup();
+		$this->hangup($this->workerClosure);
 	}
 
 	public function __get($name = '') {
 		return $this->$name;
 	}
 
-	public function loadConfig() {
+	public function loadConfig($config) {
 
-		$config = parse_ini_file("./config/config.ini", true);
+		$config = parse_ini_file(dirname(__FILE__)."/config/config.ini", true);
 
-		$this->startNum = (int)$config['startnum'] ? $this->startNum : 8;
-		$this->minNum = (int)$config['minnum'] ? $this->minNum : 4;
-		$this->maxNum = (int)$config['maxnum'] ? $this->maxNum : 16;
-		$this->stopWaitMaxTs = (int)$config['stopwaitmaxts'] ? $this->stopWaitMaxTs : 10;
-		$this->samplingLen = (int)$config['samplinglen'] ? $this->samplingLen : 60;
-		$this->logdir = $config['logdir'] ? $config['logdir'] : '/tmp';
+		$this->startNum = isset($config['process']['startnum']) ? $config['process']['startnum'] : 8;
+		$this->minNum = isset($config['process']['minnum']) ? $config['process']['minnum'] : 4;
+		$this->maxNum = isset($config['process']['maxnum']) ? $config['process']['maxnum'] : 16;
+		$this->stopWaitMaxTs = isset($config['process']['stopwaitmaxts']) ? $config['process']['stopwaitmaxts'] : 10;
+		$this->samplingLen = isset($config['process']['samplinglen']) ? $config['process']['samplinglen'] : 60;
 
-		self::$hangupLoopMicrotime = $config['hanguploopts'] ? self::$hangupLoopMicrotime : 500;
-		self::$maxExecuteTimes = $config['maxexecutetimes'] ? self::$maxExecuteTimes : 500;
+		self::$hangupLoopMicrotime = $config['process']['hanguploopts'] ? $config['process']['hanguploopts']: 500;
+		self::$maxExecuteTimes = $config['process']['maxexecutetimes'] ? $config['process']['maxexecutetimes'] : 500;
+		self::$logdir = $config['log']['logdir'] ? $config['log']['logdir'] : '/tmp';
 	}
 
 	public function execForkConsumer($num = 0) {
@@ -99,9 +103,9 @@ class Manager extends Process {
 				try {
 					$worker = new WorkerConsumer([
 						'type' => "consumer_workers",
-						'msg_queue' => $this->msgQueue,
+						'process_queue' => $this->processQueue,
 					]);
-					$worker->hangup();
+					$worker->hangup($this->workerClosure);
 				} catch (Exception $e) {
 					var_dump($e);
 				}
@@ -134,9 +138,9 @@ class Manager extends Process {
 				try {
 					$worker = new WorkerProducter([
 						'type' => "producter_workers_".$this->pid,
-						'msg_queue' => $this->msgQueue,
+						'process_queue' => $this->processQueue,
 					]);
-					$worker->hangup();
+					$worker->hangup($this->workerClosure);
 				} catch (Exception $e) {
 					var_dump($e);
 				}
@@ -157,7 +161,7 @@ class Manager extends Process {
 	}
 
 	//	主循环
-	protected function hangup() {
+	protected function hangup(Closure $closure) {
 
 		while (true) {
 			
@@ -223,8 +227,8 @@ class Manager extends Process {
 	}
 
 	protected function workerExit() {
-		echo "{$this->type} workerExit . queuelen: ". $this->getMsgQueueLen() . "\n";
-		$this->msgQueue->removeMsgQueue();
+		echo "{$this->type} workerExit . queuelen: ". $this->processQueue->getProcessQueueLen() . "\n";
+		$this->processQueue->removeProcessQueue();
 		parent::workerExit();
 	}
 
@@ -268,7 +272,7 @@ class Manager extends Process {
 	private function capacityStrategy() {
 		
 		$now = time();
-		$data = $this->msgQueue->receive(2);
+		$data = $this->processQueue->receive(2);
 
 		if($data['errorcode'] > 0) {
 			//	3分钟内 没有发生扩缩容时间的变化 kafka连接可能出现连接问题
@@ -279,6 +283,7 @@ class Manager extends Process {
 			}
 			return;
 		}
+
 		$this->samplingBucket[] = $data['msg']["length"];
 
 		$count = count($this->samplingBucket);
