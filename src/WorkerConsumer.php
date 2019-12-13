@@ -35,7 +35,7 @@ class WorkerConsumer extends Process {
 			pcntl_signal_dispatch();
 
 			// 如果进程是待退出状态 并且msg queue已处理完毕
-			if ($this->workerExitFlag === "stop" && $this->processQueue->getProcessQueueLen() == 0) {
+			if ($this->workerExitFlag === "stop" && $this->processQueue->length() == 0) {
 				$this->workerExit();
 				return;
 			}
@@ -83,7 +83,7 @@ class WorkerConsumer extends Process {
 		// var_dump($data);
 		$time = microtime(true) - $time;
 		$strlen = strlen($data['msg']);
-		$queuelen = $this->processQueue->getProcessQueueLen();
+		$queuelen = $this->processQueue->length();
 
 		$msg = ['from'  => "msg_receive",	'extra' => "msg receive res: {$data['msg']}, len:{$strlen}, messageType:1,  time:{$time},  errorcode:{$data['errorcode']}, queuelen:{$queuelen}",];
 		Process::debug("msg receive ", $msg);

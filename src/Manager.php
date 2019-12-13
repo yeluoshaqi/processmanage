@@ -227,8 +227,8 @@ class Manager extends Process {
 	}
 
 	protected function workerExit() {
-		echo "{$this->type} workerExit . queuelen: ". $this->processQueue->getProcessQueueLen() . "\n";
-		$this->processQueue->removeProcessQueue();
+		echo "{$this->type} workerExit . queuelen: ". $this->processQueue->length() . "\n";
+		$this->processQueue->remove();
 		parent::workerExit();
 	}
 

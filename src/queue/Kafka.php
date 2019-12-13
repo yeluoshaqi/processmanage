@@ -1,7 +1,7 @@
 <?php
 namespace processmanage\queue;
 
-class Kafka {
+class Kafka extends Queue{
 	
 	public static $partitions = [];
 	

@@ -69,8 +69,8 @@ class WorkerProducter extends Process {
 			$this->forConsumptionLength();
 
 			//	进程间msg队列过长 
-			if($this->processQueue->getProcessQueueLen() >= $this->processQueueMaxLen) {
-				$msg = ['from'  => $this->type,'extra' => " ------- msg queue len to large: ". $this->processQueue->getProcessQueueLen()];
+			if($this->processQueue->length() >= $this->processQueueMaxLen) {
+				$msg = ['from'  => $this->type,'extra' => " ------- msg queue len to large: ". $this->processQueue->length()];
 				Process::debug("msg queue len to large ", $msg);
 				usleep(1000);
 				continue;
