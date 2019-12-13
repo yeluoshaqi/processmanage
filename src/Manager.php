@@ -37,8 +37,10 @@ class Manager extends Process {
 	//	接受退出信号后程序最大等待时间
 	private $signalStopTs = 0;
 	private $stopWaitMaxTs = 10;
-	
 
+	// 队列信息
+	private $queuelen
+	
 	public function __construct($config, Closure $closure) {
 
 		$this->type = "manager";
@@ -70,14 +72,16 @@ class Manager extends Process {
 
 	public function loadConfig($config) {
 
-		$config = parse_ini_file(dirname(__FILE__)."/config/config.ini", true);
+		// $config = parse_ini_file(dirname(__FILE__)."/config/config.ini", true);
 
 		$this->startNum = isset($config['process']['startnum']) ? $config['process']['startnum'] : 8;
 		$this->minNum = isset($config['process']['minnum']) ? $config['process']['minnum'] : 4;
 		$this->maxNum = isset($config['process']['maxnum']) ? $config['process']['maxnum'] : 16;
 		$this->stopWaitMaxTs = isset($config['process']['stopwaitmaxts']) ? $config['process']['stopwaitmaxts'] : 10;
 		$this->samplingLen = isset($config['process']['samplinglen']) ? $config['process']['samplinglen'] : 60;
-
+		$this->queueName = $config['queue']['queuename'] ? $config['queue']['queuename'] : "";
+		$this->queueConfig = $config[$this->queueName] ? $config[$this->queueName] : [];
+		
 		self::$hangupLoopMicrotime = $config['process']['hanguploopts'] ? $config['process']['hanguploopts']: 500;
 		self::$maxExecuteTimes = $config['process']['maxexecutetimes'] ? $config['process']['maxexecutetimes'] : 500;
 		self::$logdir = $config['log']['logdir'] ? $config['log']['logdir'] : '/tmp';

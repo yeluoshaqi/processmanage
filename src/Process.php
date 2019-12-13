@@ -10,10 +10,14 @@ abstract class Process {
 	public $pid = '';
 	public $startTime = 0;
 
-	//	a resource handle that can be used to access the System V message queue.
+	//	进程间消息队列
 	protected $processQueue;
 	protected $processQueueMaxLen = 20;	//	消息队列最大长度	
 	protected $processQueueMsgMaxSize;	//	消息队列单个消息最大长度
+
+	//	消息源配置
+	private $queueName;
+	private $queueConfig;
 
 	//	用户信号
 	protected $userSignal = "";

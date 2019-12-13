@@ -18,46 +18,20 @@ class WorkerProducter extends Process {
       	'stop'      => SIGUSR2, // quit signal gracefully stop
 	];
 
-	//	消息源配置
-	private $queueName;
-	private $queueConfig;
-
 
 	public function __construct($config = []) {
 		$this->type    = isset($config['type'])? $config['type']: 'producter_workers';
 		$this->processQueue    = isset($config['process_queue'])? $config['process_queue']: '';
 		$this->pid    = isset($config['pid'])? $config['pid']: '';
-
+		$this->queueName = $config['queuename'] ? $config['queue']['queuename'] : "";
+		$this->queueConfig = $config["queueconfig"] ? $config["queueconfig"] : [];
 		parent::__construct();
-	}
-
-	//	信号处理
-	public function defineSigHandler($signal = 0) {
-		
-		$msg = ['from'  => "producter_sign", 'extra' => ["signal" => $signal, "pid" => $this->pid]];
-		Process::debug("get signal ", $msg);
-
-		switch ($signal) {
-			//	stop
-			case SIGUSR2:
-				$this->workerExitFlag = "stop";
-				break;
-
-			default:
-				break;
-		}
 	}
 
 	//	主循环
 	public function hangup() {
 
-		$this->loadConfig();
-
-		$name = $this->queueName;
-		// $this->queue = new $name($this->queueConfig);
-		$this->queue = new Kafka($this->queueConfig);
-
-		$this->queue->init();
+		$this->initQueue();
 
 		$this->registerSigHandler();
 
@@ -87,11 +61,41 @@ class WorkerProducter extends Process {
 		}
 	}
 
+	//	信号处理
+	public function defineSigHandler($signal = 0) {
+		
+		$msg = ['from'  => "producter_sign", 'extra' => ["signal" => $signal, "pid" => $this->pid]];
+		Process::debug("get signal ", $msg);
+
+		switch ($signal) {
+			//	stop
+			case SIGUSR2:
+				$this->workerExitFlag = "stop";
+				break;
+
+			default:
+				break;
+		}
+	}
+
 	// 关闭进程
 	protected function workerExit() {
 
 		$this->queue->close();
 		parent::workerExit();
+	}
+
+	private function initQueue() {
+
+		switch ($this->queueName) {
+			case 'kafka':
+				$this->queue = new Kafka($this->queueConfig);
+				break;
+			default:
+				throw new Exception("queuename is error", 1);
+				break;
+		}
+		$this->queue->init();
 	}
 
 	private function work() {
@@ -140,13 +144,5 @@ class WorkerProducter extends Process {
 		}
 	}
 
-	private function loadConfig() {
-		
-		$config = parse_ini_file(dirname(__FILE__) . "/config/config.ini", true);
-
-		$queuename = $config['queue']['queuename'] ? $config['queue']['queuename'] : 'kafka';
-		$this->queueConfig = $config[$queuename] ? $config[$queuename] : [];
-		$this->queueName = ucfirst($queuename);
-	}
 }
 
