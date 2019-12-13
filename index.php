@@ -47,10 +47,12 @@ use processmanage\Manager;
  * 		'hangup_loop_microtime' => 200000, // master&worker hangup loop microtime unit/μs
  * 		'pipe_dir' => '/tmp/', // the directory name of the process's pipe will be storaged
  * ]
- * new Manager($config, $closure)
  */
+$config = [];
 try {
-	new Manager();
+	new Manager($config, function($data) {
+		echo "I get data: {$data} \n";
+	});
 } catch (Exception $e) {
 	var_dump($e);
 }

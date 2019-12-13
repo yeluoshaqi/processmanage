@@ -22,6 +22,10 @@ class WorkerConsumer extends Process {
 		parent::__construct();
 	}
 
+	public function setWorkerClosure(Closure $closure) {
+		$this->workerClosure = $closure;
+	}
+
 	//	主循环
 	public function hangup(Closure $closure) {
 
@@ -30,7 +34,11 @@ class WorkerConsumer extends Process {
 		while (true) {
 			//	do work
 			$data = $this->deal();
-			$closure($data);
+			$workerClosure = $this->workerClosure;
+			echo "get data {$data} \n";
+			$workerClosure($data);
+			echo "workerClosure done \n";
+
 			//	信号分发
 			pcntl_signal_dispatch();
 

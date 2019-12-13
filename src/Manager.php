@@ -105,6 +105,7 @@ class Manager extends Process {
 						'type' => "consumer_workers",
 						'process_queue' => $this->processQueue,
 					]);
+					$woker->setWorkerClosure($this->workerClosure);
 					$worker->hangup($this->workerClosure);
 				} catch (Exception $e) {
 					var_dump($e);
