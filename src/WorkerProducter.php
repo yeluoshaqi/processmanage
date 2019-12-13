@@ -49,7 +49,7 @@ class WorkerProducter extends Process {
 	}
 
 	//	主循环
-	public function hangup(Closure $closure) {
+	public function hangup() {
 
 		$this->loadConfig();
 

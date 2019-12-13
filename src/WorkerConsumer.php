@@ -22,22 +22,14 @@ class WorkerConsumer extends Process {
 		parent::__construct();
 	}
 
-	public function setWorkerClosure(Closure $closure) {
-		$this->workerClosure = $closure;
-	}
-
 	//	主循环
-	public function hangup(Closure $closure) {
+	public function hangup() {
 
 		$this->registerSigHandler();
 
 		while (true) {
 			//	do work
-			$data = $this->deal();
-			$workerClosure = $this->workerClosure;
-			echo "get data {$data} \n";
-			$workerClosure($data);
-			echo "workerClosure done \n";
+			$this->deal();
 
 			//	信号分发
 			pcntl_signal_dispatch();
@@ -63,6 +55,10 @@ class WorkerConsumer extends Process {
 			++self::$currentExecuteTimes;
 		}
 	}
+	
+	public function setWorkerClosure(Closure $closure) {
+		$this->workerClosure = $closure;
+	}
 
 	//	信号处理
 	public function defineSigHandler($signal = 0) {
@@ -86,21 +82,19 @@ class WorkerConsumer extends Process {
 	}
 
 	private function deal() {
-		$time = microtime(true);
-		$data = $this->processQueue->receive(1);
-		// var_dump($data);
-		$time = microtime(true) - $time;
-		$strlen = strlen($data['msg']);
-		$queuelen = $this->processQueue->length();
 
-		$msg = ['from'  => "msg_receive",	'extra' => "msg receive res: {$data['msg']}, len:{$strlen}, messageType:1,  time:{$time},  errorcode:{$data['errorcode']}, queuelen:{$queuelen}",];
+		$data = $this->processQueue->receive(1);
+
+		$msg = ['from'  => "msg_receive",	'extra' => "msg receive res: {$data['msg']} errorcode:{$data['errorcode']}"];
 		Process::debug("msg receive ", $msg);
 
 		if(empty($data['msg'])) {
-			sleep(1);
+			usleep(1000);
+		} else {
+			$workerClosure = $this->workerClosure;
+			$workerClosure($data['msg']);
 		}
-		usleep(20000);
 
-		return $data['msg'];
+		return ;
 	}
 }

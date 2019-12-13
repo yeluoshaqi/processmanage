@@ -43,7 +43,7 @@ abstract class Process {
 	}
 
 	//	主循环
-	abstract protected function hangup(Closure $closure);
+	abstract protected function hangup();
 
 	//	主循环
 	abstract protected function defineSigHandler($signal);

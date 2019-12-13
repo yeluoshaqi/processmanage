@@ -162,7 +162,7 @@ class Manager extends Process {
 	}
 
 	//	主循环
-	protected function hangup(Closure $closure) {
+	protected function hangup() {
 
 		while (true) {
 			

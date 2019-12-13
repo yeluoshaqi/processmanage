@@ -102,7 +102,7 @@ class Kafka extends Queue{
         }
         $debugInfo .=  "  len {$lens}";
 
-        debug("partitionLengh", ["from" => "kafka", "extra" => $debugInfo]);
+		Process::debug("partitionLengh", ["from" => "kafka", "extra" => $debugInfo]);
         
         return $lens;
 	} 
