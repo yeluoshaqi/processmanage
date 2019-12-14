@@ -241,6 +241,7 @@ class Manager extends Process {
 	public function defineSigHandler($signal = 0) {
 		
 		echo "signal {$signal} \n";
+		sleep(1);
 		switch ($signal) {
 			
 			case $this->signalSupport['reload']:
