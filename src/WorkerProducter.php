@@ -116,7 +116,7 @@ class WorkerProducter extends Process {
 		//	如果数据为空
 		if(empty($str)) {
 			$this->emptyDataTime = time();
-			usleep(1000);
+			usleep(10000);
 			return ;
 		}
 		

@@ -53,6 +53,9 @@ class WorkerConsumer extends Process {
 			
 			//	当前运行次数+1
 			++self::$currentExecuteTimes;
+			if(self::$currentExecuteTimes % 20 == 0) {
+				gc_collect_cycles();
+			}
 		}
 	}
 	
@@ -83,16 +86,16 @@ class WorkerConsumer extends Process {
 
 	private function deal() {
 
-		$data = $this->processQueue->receive(1);
+		$this->data = $this->processQueue->receive(1);
 
-		$msg = ['from'  => "msg_receive",	'extra' => "msg receive res: {$data['msg']} errorcode:{$data['errorcode']}"];
-		Process::debug("msg receive ", $msg);
+		// $msg = ['from'  => "msg_receive",	'extra' => "msg receive res: {$data['msg']} errorcode:{$data['errorcode']}"];
+		// Process::debug("msg receive ", $msg);
 
-		if(empty($data['msg'])) {
+		if(empty($this->data['msg'])) {
 			usleep(10000);
 		} else {
 			$workerClosure = $this->workerClosure;
-			$workerClosure($data['msg']);
+			$workerClosure($$this->data['msg']);
 		}
 
 		return ;
